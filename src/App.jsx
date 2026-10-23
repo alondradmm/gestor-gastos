@@ -5,42 +5,81 @@ function App() {
   const [descripcion, setDescripcion] = useState("");
   const [importe, setImporte] = useState("");
   const [gastos, setGastos] = useState(() => {
-      const getGastos = localStorage.getItem("gastos");
-      if (getGastos == null){
-        return [];
-      }
-      try {
-        return JSON.parse(getGastos);
-      } catch (error) {
-        console.error("Hubo un error con el parseo:", error)
-        return [];
-      }
+    const getGastos = localStorage.getItem("gastos");
+    if (getGastos == null) {
+      return [];
     }
+    try {
+      return JSON.parse(getGastos);
+    } catch (error) {
+      console.error("Hubo un error con el parseo:", error)
+      return [];
+    }
+  }
   );
 
   const [limite, setLimite] = useState("");
   const [orden, setOrden] = useState("ninguno");
   const [categoria, setCategoria] = useState("comida");
-  
+
+  const [gastoEditando, setGastoEditando] = useState(null);
+
+  const categorias = [
+    "comida", "transporte", "entretenimiento"
+  ]
+
+  const obtenerGastosPorCategoria = (categoria) => {
+    return gastos.filter(g => g.categoria === categoria);
+  };
+
+  const resumenCategorias = categorias.map(categoria => {
+    return {
+      categoria: categoria,
+      cantidad: obtenerGastosPorCategoria(categoria).length,
+      total: obtenerGastosPorCategoria(categoria).reduce((suma, gasto) => suma + gasto.importe, 0)
+    };
+  });
+
   useEffect(() => {
     localStorage.setItem("gastos", JSON.stringify(gastos))
   }, [gastos]);
 
   function agregarGasto(event) {
     event.preventDefault();
-
     if (!descripcion.trim() || Number(importe) <= 0) {
-      return;
+        return;
     }
 
-    const nuevoGasto = {
-      id: crypto.randomUUID(),
+    const datosGasto = {
       descripcion: descripcion.trim(),
       importe: Number(importe),
-    };
+      categoria: categoria
+    }
 
-    const gastosList = [...gastos, nuevoGasto]
-    setGastos(gastosList);
+    if (gastoEditando) {
+      const gastosActualizados = gastos.map(g => {
+        if (g.id === gastoEditando.id) {
+          return {
+            id: g.id,
+            ...datosGasto
+          };
+        }
+        return g;
+      });
+
+      setGastos(gastosActualizados);
+      setGastoEditando(null);
+
+    } else {
+
+      const nuevoGasto = {
+        id: crypto.randomUUID(),
+        ...datosGasto
+      };
+
+      const gastosList = [...gastos, nuevoGasto]
+      setGastos(gastosList);
+    }
 
     setDescripcion("");
     setImporte("");
@@ -58,19 +97,19 @@ function App() {
       ? gastos
       : gastos.filter(g => g.importe >= limite);
 
-  const gastosOrdenados = 
+  const gastosOrdenados =
     orden === "asc" ?
-      [...gastosFiltrados].sort((a,b) => a.importe - b.importe)
+      [...gastosFiltrados].sort((a, b) => a.importe - b.importe)
       : orden === "desc" ?
-      [...gastosFiltrados].sort((a,b) => b.importe - a.importe)
-      : [...gastosFiltrados];
+        [...gastosFiltrados].sort((a, b) => b.importe - a.importe)
+        : [...gastosFiltrados];
 
   function eliminarGastos() {
     const gastosList = []
     setGastos(gastosList);
   }
 
-  function eliminarGasto(id){
+  function eliminarGasto(id) {
     const gastosList = gastos.filter(g => g.id !== id)
     setGastos(gastosList)
   }
@@ -86,6 +125,15 @@ function App() {
           currency: "MXN",
         })}
       </h2>
+
+      <ul>
+        {resumenCategorias.map(resumen => (
+          <li className="gasto-item" key={resumen.categoria}>
+            <p>Gastos de {resumen.categoria}: {resumen.cantidad}</p>
+            <p>Total: {resumen.total.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}</p>
+          </li>
+        ))}
+      </ul>
 
       <form onSubmit={agregarGasto}>
         <label>
@@ -113,7 +161,20 @@ function App() {
           />
         </label>
 
-        <button type="submit">Agregar gasto</button>
+        <select value={categoria} onChange={(event) => setCategoria(event.target.value)}>
+          <option value="comida">Comida</option>
+          <option value="transporte">Transporte</option>
+          <option value="entretenimiento">Entretenimiento</option>
+        </select>
+
+        <button type="submit">{gastoEditando ? 'Guardar cambios' : 'Agregar gasto'}</button>
+        {gastoEditando && (
+          <button onClick={() => {
+            setGastoEditando(null);
+            setDescripcion("");
+            setImporte("")
+          }}>Cancelar</button>
+        )}
       </form>
 
       <h2>Mis gastos</h2>
@@ -146,17 +207,41 @@ function App() {
         <ul>
           <p>Gastos Registrados: {gastosCount}</p>
           {gastosOrdenados.map((gasto) => (
-            <li key={gasto.id}>
-              {gasto.descripcion} —{" "}
-              {gasto.importe.toLocaleString("es-MX", {
-                style: "currency",
-                currency: "MXN",
-              })}
-              <button onClick={() => eliminarGasto(gasto.id)}>Eliminar</button>
+            <li key={gasto.id} className="gasto-item">
+              <div className="gasto-info">
+                <p>{gasto.descripcion}</p>
+                <p>
+                  {gasto.importe.toLocaleString("es-MX", {
+                    style: "currency",
+                    currency: "MXN",
+                  })}
+                </p>
+              </div>
+              <div className="gasto-footer">
+                <span className="categoria-etiqueta">
+                  {gasto.categoria}
+                </span>
+
+                <div>
+                  <button onClick={() => eliminarGasto(gasto.id)}>
+                    Eliminar
+                  </button>
+                  <button onClick={() => {
+                    setGastoEditando(gasto);
+                    setDescripcion(gasto.descripcion);
+                    setImporte(gasto.importe);
+                    setCategoria(gasto.categoria);
+                  }
+                  }>
+                    Editar
+                  </button>
+                </div>
+
+              </div>
             </li>
           ))}
           <button onClick={eliminarGastos}>Eliminar Gastos</button>
-        </ul> 
+        </ul>
       )}
     </main>
   );
