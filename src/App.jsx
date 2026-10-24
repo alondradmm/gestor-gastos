@@ -1,5 +1,7 @@
 
 import { useState, useEffect } from "react";
+import ListaGastos from "./components/ListaGastos";
+import ResumenCategorias from "./components/ResumenCategorias";
 
 function App() {
   const [descripcion, setDescripcion] = useState("");
@@ -117,7 +119,6 @@ function App() {
   return (
     <main>
       <h1>Gestor de Gastos</h1>
-
       <h2>
         Total:{" "}
         {total.toLocaleString("es-MX", {
@@ -126,14 +127,7 @@ function App() {
         })}
       </h2>
 
-      <ul>
-        {resumenCategorias.map(resumen => (
-          <li className="gasto-item" key={resumen.categoria}>
-            <p>Gastos de {resumen.categoria}: {resumen.cantidad}</p>
-            <p>Total: {resumen.total.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}</p>
-          </li>
-        ))}
-      </ul>
+      <ResumenCategorias resumenCategorias={resumenCategorias}/>
 
       <form onSubmit={agregarGasto}>
         <label>
@@ -201,48 +195,16 @@ function App() {
         </select>
       </label>
 
-      {gastos.length === 0 ? (
-        <p>Aún no has registrado gastos.</p>
-      ) : (
-        <ul>
-          <p>Gastos Registrados: {gastosCount}</p>
-          {gastosOrdenados.map((gasto) => (
-            <li key={gasto.id} className="gasto-item">
-              <div className="gasto-info">
-                <p>{gasto.descripcion}</p>
-                <p>
-                  {gasto.importe.toLocaleString("es-MX", {
-                    style: "currency",
-                    currency: "MXN",
-                  })}
-                </p>
-              </div>
-              <div className="gasto-footer">
-                <span className="categoria-etiqueta">
-                  {gasto.categoria}
-                </span>
-
-                <div>
-                  <button onClick={() => eliminarGasto(gasto.id)}>
-                    Eliminar
-                  </button>
-                  <button onClick={() => {
-                    setGastoEditando(gasto);
-                    setDescripcion(gasto.descripcion);
-                    setImporte(gasto.importe);
-                    setCategoria(gasto.categoria);
-                  }
-                  }>
-                    Editar
-                  </button>
-                </div>
-
-              </div>
-            </li>
-          ))}
-          <button onClick={eliminarGastos}>Eliminar Gastos</button>
-        </ul>
-      )}
+      <ListaGastos 
+        gastos={gastos}
+        gastosOrdenados={gastosOrdenados}
+        gastosCount={gastosCount}
+        eliminarGasto={eliminarGasto}
+        eliminarGastos={eliminarGastos}
+        setGastoEditando={setGastoEditando}
+        setDescripcion={setDescripcion}
+        setImporte={setImporte}
+        setCategoria={setCategoria}/>
     </main>
   );
 }
