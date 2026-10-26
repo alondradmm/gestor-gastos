@@ -1,3 +1,5 @@
+import GastoItem from "./GastoItem";
+
 function ListaGastos({
   gastos,
   gastosOrdenados,
@@ -10,47 +12,35 @@ function ListaGastos({
   setCategoria }) {
   return (
     <div>
-      {gastos.length === 0 ? (
+      {gastosCount === 0 ? (
         <p>Aún no has registrado gastos.</p>
       ) : (
-        <ul>
+        <>
           <p>Gastos Registrados: {gastosCount}</p>
-          {gastosOrdenados.map((gasto) => (
-            <li key={gasto.id} className="gasto-item">
-              <div className="gasto-info">
-                <p>{gasto.descripcion}</p>
-                <p>
-                  {gasto.importe.toLocaleString("es-MX", {
-                    style: "currency",
-                    currency: "MXN",
-                  })}
-                </p>
-              </div>
-              <div className="gasto-footer">
-                <span className="categoria-etiqueta">
-                  {gasto.categoria}
-                </span>
-
-                <div>
-                  <button onClick={() => eliminarGasto(gasto.id)}>
-                    Eliminar
-                  </button>
-                  <button onClick={() => {
-                    setGastoEditando(gasto);
-                    setDescripcion(gasto.descripcion);
-                    setImporte(gasto.importe);
-                    setCategoria(gasto.categoria);
-                  }
-                  }>
-                    Editar
-                  </button>
-                </div>
-
-              </div>
-            </li>
-          ))}
-          <button onClick={eliminarGastos}>Eliminar Gastos</button>
-        </ul>
+          {gastosOrdenados.length === 0 ? (
+            <p>No hay registros que coincidan con el filtro.</p>
+          ) : (
+            <>
+              <ul>
+                {gastosOrdenados.map((gasto) => (
+                  <GastoItem
+                    key={gasto.id}
+                    gasto={gasto}
+                    eliminarGasto={eliminarGasto}
+                    setGastoEditando={setGastoEditando}
+                    setDescripcion={setDescripcion}
+                    setImporte={setImporte}
+                    setCategoria={setCategoria} />
+                ))}
+              </ul>
+              <button onClick={() => {
+                if (window.confirm("¿Estás seguro?")) {
+                  eliminarGastos()
+                }
+              }}>Eliminar Gastos</button>
+            </>
+          )}
+        </>
       )}
     </div>
   );
