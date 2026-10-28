@@ -1,15 +1,12 @@
 import GastoItem from "./GastoItem";
 
 function ListaGastos({
-  gastos,
   gastosOrdenados,
   gastosCount,
   eliminarGasto,
   eliminarGastos,
   setGastoEditando,
-  setDescripcion,
-  setImporte,
-  setCategoria }) {
+  setNewGasto }) {
   return (
     <div>
       {gastosCount === 0 ? (
@@ -28,9 +25,7 @@ function ListaGastos({
                     gasto={gasto}
                     eliminarGasto={eliminarGasto}
                     setGastoEditando={setGastoEditando}
-                    setDescripcion={setDescripcion}
-                    setImporte={setImporte}
-                    setCategoria={setCategoria} />
+                    setNewGasto={setNewGasto} />
                 ))}
               </ul>
               <button onClick={() => {

@@ -3,10 +3,11 @@ import { useState, useEffect } from "react";
 import ListaGastos from "./components/ListaGastos";
 import ResumenCategorias from "./components/ResumenCategorias";
 import FormularioGasto from "./components/FormularioGasto";
+import MensajeError from "./components/MensajeError";
+
+import validarGasto from "./utils/validarGasto";
 
 function App() {
-  const [descripcion, setDescripcion] = useState("");
-  const [importe, setImporte] = useState("");
   const [gastos, setGastos] = useState(() => {
     const getGastos = localStorage.getItem("gastos");
     if (getGastos == null) {
@@ -21,15 +22,38 @@ function App() {
   }
   );
 
+  const defaultGasto = {
+    descripcion: "",
+    importe: 0,
+    categoria: "comida"
+  }
+
+  const obtenerDatosFormulario = ((gasto) => {
+    return {
+      descripcion: gasto.descripcion,
+      importe: gasto.importe,
+      categoria: gasto.categoria
+    }
+  });
+
+
+  const [newGasto, setNewGasto] = useState(defaultGasto)
+  const handleChange = ({ target }) => {
+    const { name, value } = target;
+    setNewGasto((prev) => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
   const [limite, setLimite] = useState("");
   const [orden, setOrden] = useState("ninguno");
-  const [categoria, setCategoria] = useState("comida");
 
   const [gastoEditando, setGastoEditando] = useState(null);
 
   const [limitePresupuesto, setLimitePresupuesto] = useState(() => {
     const getLimitePresupuesto = localStorage.getItem("limitePresupuesto");
-    if (getLimitePresupuesto == null){
+    if (getLimitePresupuesto == null) {
       return 5000
     }
     try {
@@ -56,6 +80,8 @@ function App() {
     };
   });
 
+  const [error, setError] = useState("")
+
   useEffect(() => {
     localStorage.setItem("gastos", JSON.stringify(gastos))
   }, [gastos]);
@@ -66,14 +92,19 @@ function App() {
 
   function agregarGasto(event) {
     event.preventDefault();
-    if (!descripcion.trim() || Number(importe) <= 0) {
-      return;
+
+    const error = validarGasto(newGasto.descripcion, newGasto.importe);
+    if (error) {
+      setError(error);
+      return
     }
 
+    setError("")
+
     const datosGasto = {
-      descripcion: descripcion.trim(),
-      importe: Number(importe),
-      categoria: categoria
+      descripcion: newGasto.descripcion.trim(),
+      importe: Number(newGasto.importe),
+      categoria: newGasto.categoria
     }
 
     if (gastoEditando) {
@@ -101,8 +132,7 @@ function App() {
       setGastos(gastosList);
     }
 
-    setDescripcion("");
-    setImporte("");
+    setNewGasto(defaultGasto)
   }
 
   const total = gastos.reduce(
@@ -146,18 +176,25 @@ function App() {
       </h2>
       <label>
         Presupuesto:
-        <input 
+        <input
           type="number"
           min="0.01"
           step="0.01"
           placeholder="Ej. 150"
           value={limitePresupuesto}
           onChange={(event) => {
-            setLimitePresupuesto(event.target.value == "" ? "" : Number(event.target.value))}
+            if (Number(event.target.value) < 0) {
+              setError("No se permiten valores negativos")
+            } else {
+              setError('')
+              setLimitePresupuesto(event.target.value == "" ? "" : Number(event.target.value))
+            }
           }
-          />
+          }
+        />
       </label>
-      {limitePresupuesto > 0 && 
+      <MensajeError mensaje={error} />
+      {limitePresupuesto > 0 &&
         total > limitePresupuesto && (
           <p>
             Superaste el límite de {limitePresupuesto.toLocaleString("es-MX", {
@@ -171,14 +208,12 @@ function App() {
       <ResumenCategorias resumenCategorias={resumenCategorias} />
 
       <FormularioGasto
-        descripcion={descripcion}
-        setDescripcion={setDescripcion}
-        importe={importe}
-        setImporte={setImporte}
-        categoria={categoria}
-        setCategoria={setCategoria}
+        newGasto={newGasto}
+        setNewGasto={setNewGasto}
         gastoEditando={gastoEditando}
-        agregarGasto={agregarGasto} />
+        agregarGasto={agregarGasto}
+        handleChange={handleChange}
+        defaultGasto={defaultGasto} />
 
       <h2>Mis gastos</h2>
       <label>
@@ -205,16 +240,14 @@ function App() {
       </label>
 
       <ListaGastos
-        gastos={gastos}
         gastosOrdenados={gastosOrdenados}
         gastosCount={gastosCount}
         eliminarGasto={eliminarGasto}
         eliminarGastos={eliminarGastos}
         gastoEditando={gastoEditando}
         setGastoEditando={setGastoEditando}
-        setDescripcion={setDescripcion}
-        setImporte={setImporte}
-        setCategoria={setCategoria} />
+        setNewGasto={setNewGasto}
+        obtenerDatosFormulario={obtenerDatosFormulario} />
     </main>
   );
 }

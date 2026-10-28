@@ -2,9 +2,7 @@ function GastoItem({
   gasto,
   eliminarGasto,
   setGastoEditando,
-  setDescripcion,
-  setImporte,
-  setCategoria
+  setNewGasto, obtenerDatosFormulario
 }) {
   return (
     <li className="gasto-item">
@@ -28,9 +26,7 @@ function GastoItem({
           </button>
           <button onClick={() => {
             setGastoEditando(gasto);
-            setDescripcion(gasto.descripcion);
-            setImporte(gasto.importe);
-            setCategoria(gasto.categoria);
+            setNewGasto(obtenerDatosFormulario(gasto));
           }
           }>
             Editar

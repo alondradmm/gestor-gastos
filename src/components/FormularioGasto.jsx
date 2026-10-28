@@ -1,19 +1,18 @@
+
+
 function FormularioGasto({
-  descripcion, setDescripcion,
-  importe, setImporte,
-  categoria, setCategoria,
+  newGasto, setNewGasto, defaultGasto,
   gastoEditando, setGastoEditando,
-  agregarGasto
+  agregarGasto, handleChange
 }) {
   return (
     <form onSubmit={agregarGasto}>
       <label>
         Descripción
         <input
-          value={descripcion}
-          onChange={(event) =>
-            setDescripcion(event.target.value)
-          }
+          name="descripcion"
+          value={newGasto.descripcion}
+          onChange={handleChange}
           placeholder="Ej. Comida"
         />
       </label>
@@ -21,18 +20,17 @@ function FormularioGasto({
       <label>
         Importe
         <input
+          name="importe"
           type="number"
           min="0.01"
           step="0.01"
-          value={importe}
-          onChange={(event) =>
-            setImporte(event.target.value)
-          }
+          value={newGasto.importe}
+          onChange={handleChange}
           placeholder="Ej. 150"
         />
       </label>
 
-      <select value={categoria} onChange={(event) => setCategoria(event.target.value)}>
+      <select value={newGasto.categoria} name="categoria" onChange={handleChange}>
         <option value="comida">Comida</option>
         <option value="transporte">Transporte</option>
         <option value="entretenimiento">Entretenimiento</option>
@@ -43,8 +41,7 @@ function FormularioGasto({
         <button type="button"
           onClick={() => {
           setGastoEditando(null);
-          setDescripcion("");
-          setImporte("")
+          setNewGasto(defaultGasto)
         }}>Cancelar</button>
       )}
     </form>
